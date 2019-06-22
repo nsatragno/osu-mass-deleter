@@ -25,6 +25,7 @@ public class Main {
 	private HashSet<File> filesToSave;
 	private HashSet<File> filesToDelete;
 	private JButton deleteButton;
+	private int filesProcessed;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -92,23 +93,27 @@ public class Main {
 	}
 
 	private void previewDeleteFiles() {
-		filesToSave = new HashSet<File>();
-		filesToDelete = new HashSet<File>();
-		markFiles(folder);
-
-		filesToDelete.removeAll(filesToSave);
-		
-		ArrayList<File> ordered = new ArrayList<>(filesToDelete.size());
-		filesToDelete.forEach(file -> ordered.add(file));
-		ordered.sort((f1, f2) -> f1.toString().compareTo(f2.toString()));
-		
-		StringBuilder text = new StringBuilder();
-		ordered.forEach(file -> text.append(file.getAbsolutePath() + "\n"));
-		preview.setText(text.toString());
 		preview.setVisible(true);
+		filesProcessed = 0;
+		new Thread(() -> {
+			filesToSave = new HashSet<File>();
+			filesToDelete = new HashSet<File>();
+			markFiles(folder);
+
+			filesToDelete.removeAll(filesToSave);
+			
+			ArrayList<File> ordered = new ArrayList<>(filesToDelete.size());
+			filesToDelete.forEach(file -> ordered.add(file));
+			ordered.sort((f1, f2) -> f1.toString().compareTo(f2.toString()));
+			
+			StringBuilder text = new StringBuilder();
+			ordered.forEach(file -> text.append(file.getAbsolutePath() + "\n"));
+			preview.setText(text.toString());
+		}).start();
 	}
 
 	private void markFiles(File folder) {
+		preview.append(++filesProcessed + " - Processing folder: " + folder + "\n");
 		for (File child : folder.listFiles(file -> file.isDirectory())) {
 			markFiles(child);
 		}
